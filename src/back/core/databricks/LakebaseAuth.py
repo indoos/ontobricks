@@ -252,6 +252,13 @@ class LakebaseAuth:
         if self._token and (now - self._token_ts) < _TOKEN_TTL_S:
             return self._token
 
+        # Handle legacy Provisioned instances (if bound via `database` resource)
+        legacy_instance = os.environ.get("DATABASE_INSTANCE_NAME")
+        if legacy_instance:
+            self._token = self._password_legacy(legacy_instance)
+            self._token_ts = now
+            return self._token
+
         self._ensure_workspace()
         # Force project resolution so the endpoint resource path is
         # populated. ``instance_name`` caches; this is cheap on
@@ -305,6 +312,19 @@ class LakebaseAuth:
             body={"endpoint": endpoint_resource},
         ) or {}
         return resp.get("token") or ""
+
+    def _password_legacy(self, instance_name: str) -> str:
+        """Mint a legacy credential for a Provisioned Lakebase instance."""
+        try:
+            self._ensure_workspace()
+            # WorkspaceClient.database.generate_database_credential(instance_name)
+            # returns a GenerateDatabaseCredentialResponse with a 'token' field.
+            resp = self._w.database.generate_database_credential(instance_name)
+            return resp.token
+        except Exception as exc:  # noqa: BLE001
+            raise ValidationError(
+                f"Failed to mint legacy Lakebase credential for {instance_name!r}: {exc}"
+            ) from exc
 
     def invalidate(self) -> None:
         """Drop the cached token so the next call re-authenticates."""

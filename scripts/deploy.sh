@@ -83,10 +83,13 @@ _dab_var_overrides=(
     "--var=registry_catalog=${REGISTRY_CATALOG}"
     "--var=registry_schema=${REGISTRY_SCHEMA}"
     "--var=registry_volume=${REGISTRY_VOLUME}"
-    "--var=lakebase_project=${LAKEBASE_PROJECT}"
-    "--var=lakebase_branch=${LAKEBASE_BRANCH}"
-    "--var=lakebase_database_resource_segment=${LAKEBASE_DATABASE_RESOURCE_SEGMENT}"
+    "--var=lakebase_project=${LAKEBASE_PROJECT:-}"
+    "--var=lakebase_branch=${LAKEBASE_BRANCH:-}"
+    "--var=lakebase_database_resource_segment=${LAKEBASE_DATABASE_RESOURCE_SEGMENT:-}"
     "--var=lakebase_registry_schema=${LAKEBASE_REGISTRY_SCHEMA}"
+    "--var=legacy_db_name=${LAKEBASE_DATABASE_NAME:-}"
+    "--var=legacy_db_instance=${LAKEBASE_INSTANCE_NAME:-}"
+    "--var=serving_endpoint_name=${SERVING_ENDPOINT_NAME:-}"
 )
 
 echo "=== OntoBricks Deployment (DAB) ==="
@@ -95,8 +98,10 @@ echo "Target  : $TARGET"
 echo "App     : $APP_NAME ($APP_RESOURCE_KEY)"
 echo "MCP app : $MCP_APP_NAME ($MCP_APP_RESOURCE_KEY)"
 echo "Registry: ${REGISTRY_CATALOG}.${REGISTRY_SCHEMA}.${REGISTRY_VOLUME}"
-if [[ "$TARGET" == *lakebase* ]]; then
-    echo "Lakebase: projects/${LAKEBASE_PROJECT}/branches/${LAKEBASE_BRANCH}/databases/${LAKEBASE_DATABASE_RESOURCE_SEGMENT}"
+if [[ "$TARGET" == "dev-lakebase" ]]; then
+    echo "Lakebase: projects/${LAKEBASE_PROJECT:-}/branches/${LAKEBASE_BRANCH:-}/databases/${LAKEBASE_DATABASE_RESOURCE_SEGMENT:-}"
+elif [[ "$TARGET" == "dev-legacy-lakebase" ]]; then
+    echo "Lakebase: instance=${LAKEBASE_INSTANCE_NAME}, database=${LAKEBASE_DATABASE_NAME}"
 fi
 
 # ── 1. Verify CLI auth ──────────────────────────────────────────────

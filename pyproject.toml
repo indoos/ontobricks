@@ -36,6 +36,18 @@ lakebase = [
     "psycopg[binary]>=3.2.0",
     "psycopg-pool>=3.2.0",
 ]
+dev = [
+    "pytest>=9.0.3",
+    "pytest-asyncio>=0.21.0",
+    "httpx>=0.25.0",
+    "black>=26.3.1",
+    "flake8>=6.0.0",
+    "pytest-cov>=4.1.0",
+    "responses>=0.24.0",
+    "playwright>=1.40.0",
+    "sphinx>=7.0.0",
+    "myst-parser>=3.0.0",
+]
 
 [dependency-groups]
 dev = [

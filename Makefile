@@ -94,7 +94,7 @@ dev:
 
 prod:
 	@echo "Starting production server..."
-	. .venv/bin/activate && uvicorn app.fastapi.main:app --host 0.0.0.0 --port 8000
+	. .venv/bin/activate && uvicorn shared.fastapi.main:app --host 0.0.0.0 --port 8000
 
 # ── Deployment (DAB — Databricks Asset Bundles) ──────────────
 # `scripts/deploy.sh` is the single orchestrator: it sources

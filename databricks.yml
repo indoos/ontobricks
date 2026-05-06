@@ -159,6 +159,17 @@ variables:
     description: "OntoBricks registry schema inside Postgres (``LAKEBASE_SCHEMA`` in app.yaml)"
     default: "ontobricks_registry"
 
+  # ── Legacy / Serving resources ──────────────────────────────────
+  legacy_db_name:
+    description: "Legacy Lakebase database name"
+    default: "onto_db"
+  legacy_db_instance:
+    description: "Legacy Lakebase instance name"
+    default: "Databricks-Lakebase"
+  serving_endpoint_name:
+    description: "Model Serving endpoint for AI features"
+    default: "databricks-claude-haiku-4-5"
+
 resources:
   apps:
     # ── Dev sandbox app (FastAPI UI) ────────────────────────────
@@ -178,6 +189,11 @@ resources:
             securable_type: "VOLUME"
             securable_full_name: "${var.registry_catalog}.${var.registry_schema}.${var.registry_volume}"
             permission: WRITE_VOLUME
+        - name: serving-endpoint
+          description: "LLM serving endpoint for AI features"
+          serving_endpoint:
+            name: ${var.serving_endpoint_name}
+            permission: CAN_QUERY
 
     # ── MCP companion server ────────────────────────────────────
     # FastMCP server exposing OntoBricks Digital Twin tools to the
@@ -202,6 +218,11 @@ resources:
             securable_type: "VOLUME"
             securable_full_name: "${var.registry_catalog}.${var.registry_schema}.${var.registry_volume}"
             permission: WRITE_VOLUME
+        - name: serving-endpoint
+          description: "LLM serving endpoint for AI features"
+          serving_endpoint:
+            name: ${var.serving_endpoint_name}
+            permission: CAN_QUERY
 
 targets:
   # Default sandbox: Volume-only registry backend.
@@ -238,4 +259,27 @@ targets:
               postgres:
                 branch: projects/${var.lakebase_project}/branches/${var.lakebase_branch}
                 database: projects/${var.lakebase_project}/branches/${var.lakebase_branch}/databases/${var.lakebase_database_resource_segment}
+                permission: "CAN_CONNECT_AND_CREATE"
+
+  # Sandbox with the legacy Lakebase Provisioned registry backend
+  # and Serving Endpoint bound.
+  dev-legacy-lakebase:
+    mode: development
+    resources:
+      apps:
+        ontobricks_dev_app:
+          resources:
+            - name: database
+              description: "Legacy Lakebase database for the apps metadata"
+              database:
+                database_name: ${var.legacy_db_name}
+                instance_name: ${var.legacy_db_instance}
+                permission: "CAN_CONNECT_AND_CREATE"
+        mcp_ontobricks_app:
+          resources:
+            - name: database
+              description: "Legacy Lakebase database for the apps metadata"
+              database:
+                database_name: ${var.legacy_db_name}
+                instance_name: ${var.legacy_db_instance}
                 permission: "CAN_CONNECT_AND_CREATE"

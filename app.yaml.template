@@ -63,6 +63,15 @@ env:
     value: "${APP_REGISTRY_SCHEMA}"
   - name: REGISTRY_VOLUME
     value: "${APP_REGISTRY_VOLUME}"
+  # Legacy Lakebase (Provisioned) — only used when the `database`
+  # resource is bound (not `postgres`).
+  - name: DATABASE_INSTANCE_NAME
+    value: "${LAKEBASE_INSTANCE_NAME}"
+  - name: DATABASE_NAME
+    value: "${LAKEBASE_DATABASE_NAME}"
+  # Serving Endpoint
+  - name: SERVING_ENDPOINT_NAME
+    value: "${SERVING_ENDPOINT_NAME}"
   # App name for permission management — auto-detected at runtime from
   # the Databricks Apps platform (the runtime injects DATABRICKS_APP_NAME
   # as the deployed app's name, e.g. "ontobricks" for prod and
