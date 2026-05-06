@@ -133,16 +133,20 @@ class LakebaseAuth:
         we cache both the project_id and the matched endpoint
         resource path; the latter is consumed by :meth:`password`.
 
-        Raises :class:`ValidationError` if no endpoint matches —
-        that's the canonical "the bundle is binding the wrong
-        project" failure and must surface loudly rather than
-        silently fall back to a different code path.
-
-        ``PGAPPNAME`` is intentionally **not** consulted: Databricks
-        Apps populates it with the app's name (e.g. ``ontobricks-dev``)
-        which is unrelated to the Lakebase project.
+        For legacy Provisioned instances (when ``DATABASE_INSTANCE_NAME``
+        is set), returns that name immediately without an API walk.
         """
         if self._instance_name:
+            return self._instance_name
+
+        legacy_instance = os.environ.get("DATABASE_INSTANCE_NAME")
+        logger.warning("LakebaseAuth PROBE: DATABASE_INSTANCE_NAME=%r", legacy_instance)
+        # Log all related env vars for debugging
+        db_env = {k: v for k, v in os.environ.items() if k.startswith(("DATABASE_", "PG", "ONT_"))}
+        logger.warning("LakebaseAuth PROBE: DB Env: %r", db_env)
+
+        if legacy_instance:
+            self._instance_name = legacy_instance
             return self._instance_name
 
         host = self.host.strip().lower()
@@ -317,9 +321,9 @@ class LakebaseAuth:
         """Mint a legacy credential for a Provisioned Lakebase instance."""
         try:
             self._ensure_workspace()
-            # WorkspaceClient.database.generate_database_credential(instance_name)
-            # returns a GenerateDatabaseCredentialResponse with a 'token' field.
-            resp = self._w.database.generate_database_credential(instance_name)
+            # WorkspaceClient.database.generate_database_credential(instance_names=[...])
+            # returns a DatabaseCredential with a 'token' field.
+            resp = self._w.database.generate_database_credential(instance_names=[instance_name])
             return resp.token
         except Exception as exc:  # noqa: BLE001
             raise ValidationError(
